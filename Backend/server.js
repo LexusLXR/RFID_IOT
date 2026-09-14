@@ -1,8 +1,10 @@
 const express = require("express");
+const cors = require("cors");
 const pool = require("./db");
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -149,6 +151,59 @@ app.get("/api/logs", async (req, res) => {
 
         res.status(500).json({
             message: "Failed to fetch access logs"
+        });
+    }
+});
+
+app.get("/api/users", async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT
+                id,
+                name,
+                email,
+                rfid_uid,
+                department,
+                status
+            FROM users
+            WHERE status = TRUE
+            ORDER BY name ASC
+        `);
+
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: "Failed to fetch users"
+        });
+    }
+});
+
+
+app.get("/api/devices", async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT
+                d.id,
+                d.device_name,
+                d.device_code,
+                d.status,
+                l.name AS location
+            FROM devices d
+            JOIN locations l
+                ON d.location_id = l.id
+            ORDER BY d.id ASC
+        `);
+
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: "Failed to fetch devices"
         });
     }
 });
